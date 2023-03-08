@@ -1,6 +1,6 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { VilleService } from './services/ville.service';
-import { SoapService } from './soap.service';
+import { SoapService } from './services/soap.service';
 
 @Component({
   selector: 'app-root',
@@ -14,8 +14,9 @@ export class AppComponent {
 
   title = 'EV_RoadTrip_Planner';
 
-  url = '127.0.0.1:8000/';
-  vitMoy = 60;
+  dureeH : number = 0;
+  dureeM : number = 0;
+  vitMoy = 60.0;
   villeDep:any
   villeArr:any
 
@@ -28,21 +29,23 @@ export class AppComponent {
       this.villeDep = gps[0];
       this.dep.nativeElement.value = gps[0].display_name;
       if (this.villeArr != null) {
-        this.SoapRequest([[this.villeDep!.lat, this.villeDep!.lon],[this.villeArr!.lat, this.villeArr!.lon]])
+        this.SoapRequest()
       }
     })
     this.villeService.GetVille(this.arr.nativeElement.value).subscribe((gps) => {
       this.villeArr = gps[0];
       this.arr.nativeElement.value = gps[0].display_name;
       if (this.villeDep != null) {
-        this.SoapRequest([[this.villeDep!.lat, this.villeDep!.lon],[this.villeArr!.lat, this.villeArr!.lon]])
+        this.SoapRequest()
       }
     })
   }
 
-  SoapRequest(bornes: Array<Array<number>>) {
-    this.soapService.GetTrajectTime(bornes, this.vitMoy).subscribe((response) => {
-      console.log(this.soapService.ParseSoap(response));
+  SoapRequest() {
+    this.soapService.GetTrajectTime(100.0, .0, 0, this.vitMoy).subscribe((response) => {
+      let duree = this.soapService.ParseSoap(response);
+      this.dureeH = Math.floor(duree)
+      this.dureeM = Math.floor((duree - this.dureeH) * 60)
     });
   }
 }
