@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { BornesService } from '../services/bornes.service';
@@ -46,6 +46,17 @@ export class MapComponent implements OnInit {
   }
   private _villeArr:any;
 
+  @Input()
+  get autonomie(): number { return this._autonomie; }
+  set autonomie(dist: number) {
+    this._autonomie = dist;
+    this.creatRoad();
+  }
+  private _autonomie:number = -1;
+
+  @Output() nbArret = new EventEmitter<number>();
+  @Output() dist = new EventEmitter<number>();
+
   map!:L.Map;
   fakeMap:L.Map|null = null;
 
@@ -72,7 +83,10 @@ export class MapComponent implements OnInit {
   }
 
   creatRoad(){
-    if(this._villeDep == null || this._villeArr == null) return;
+    if(this._villeDep == null || this._villeArr == null || this._autonomie == -1) return;
+    console.log(this.villeArr);
+    console.log(this.villeDep);
+    console.log(this.autonomie);
     this.route = L.Routing.control({
       waypoints: [
         L.latLng(this._villeDep.lat, this._villeDep.lon),
@@ -85,12 +99,15 @@ export class MapComponent implements OnInit {
   }
 
   async creatRoad2(e:any) {
-    let indexs = this.calculIndexArray(e.routes[0].summary.totalDistance, 50000, e.routes[0].waypointIndices[1]);
+    let indexs = this.calculIndexArray(e.routes[0].summary.totalDistance, this._autonomie * 1000, e.routes[0].waypointIndices[1]);
+    this.nbArret.emit(indexs.length);
+    this.dist.emit(e.routes[0].summary.totalDistance / 1000);
+    //console.log(indexs.length);
     let waypoints = [];
     waypoints.push(L.latLng(this._villeDep.lat, this._villeDep.lon));
     for (let i = 0; i < indexs.length; i++) {
       let coord = e.routes[0].coordinates[indexs[i]]
-      let bornes = await this.bornesService.GetBornes(coord["lat"],coord["lng"], 10000).toPromise();
+      let bornes = await this.bornesService.GetBornes(coord["lat"],coord["lng"], 100000).toPromise();
       let borne = bornes['records'][0]['fields']["geo_point_borne"]
       waypoints.push(L.latLng(borne[0], borne[1]));
     }
@@ -117,9 +134,9 @@ export class MapComponent implements OnInit {
       for (let i = 1; i <= nbReloads; i++) {
         arrayIndex.push(index * i);
       }
-      console.log(arrayIndex);
+      //console.log(arrayIndex);
       return arrayIndex;
     }
-    return null;
+    return [];
   }
 }

@@ -8,6 +8,10 @@
             <label>Arrivée</label>
             <input class="ville" #arr type="text">
         </div>
+        <div>
+            <input placeholder="marque de la voiture" type="text" #voiture (focusout)="selectMarque()">
+            <select #select><option>Model voiture</option></select>
+        </div>
 
         <input type="button" value="Valider" (click)="click()">
     </div>
@@ -16,6 +20,6 @@
             <p>Durée du trajet :</p>
             <p>{{dureeH}}h{{dureeM}}min</p>
         </div>
-        <div id="map"><app-map [villeDep]="villeDep" [villeArr]="villeArr"></app-map></div>
+        <div id="map"><app-map [autonomie]="autonomie" [villeDep]="villeDep" [villeArr]="villeArr" (dist)="changeDist($event)" (nbArret)="changeNbArret($event)"></app-map></div>
     </div>
 </div>
