@@ -19,7 +19,10 @@
         <div style="width: fit-content; margin-top: auto; margin-bottom: auto;">
             <p>Durée du trajet :</p>
             <p>{{dureeH}}h{{dureeM}}min</p>
+            <br>
+            <p>Cout du trajet :</p>
+            <p>{{cost}}€</p>
         </div>
-        <div id="map"><app-map [autonomie]="autonomie" [villeDep]="villeDep" [villeArr]="villeArr" (dist)="changeDist($event)" (nbArret)="changeNbArret($event)"></app-map></div>
+        <div id="map"><app-map #map [autonomie]="autonomie" [villeDep]="villeDep" [villeArr]="villeArr" (dist)="changeDist($event)" (nbArret)="changeNbArret($event)"></app-map></div>
     </div>
 </div>

@@ -2,6 +2,7 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { VilleService } from './services/ville.service';
 import { SoapService } from './services/soap.service';
 import { VoitureService } from './services/voiture.service';
+import { CostService } from './services/cost.service';
 
 @Component({
   selector: 'app-root',
@@ -9,11 +10,14 @@ import { VoitureService } from './services/voiture.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  constructor(private soapService: SoapService, private villeService: VilleService, private voitureService: VoitureService) { }
+  constructor(private soapService: SoapService, private villeService: VilleService,
+    private voitureService: VoitureService, private costService: CostService) { }
   @ViewChild('dep') dep!: ElementRef;
   @ViewChild('arr') arr!: ElementRef;
   @ViewChild('select') select!: ElementRef;
   @ViewChild('voiture') voiture!: ElementRef;
+
+
 
   title = 'EV_RoadTrip_Planner';
 
@@ -26,6 +30,7 @@ export class AppComponent {
   dist:number = -1;
   listVoiture:Array<any> = [];
   autonomie:number = -1;
+  cost:number = 0;
 
   ngOnInit(): void {
 
@@ -34,25 +39,32 @@ export class AppComponent {
   click() {
     this.nbArret = -1;
     this.dist = -1;
+    this.cost = 0;
+    this.dureeH = 0;
+    this.dureeM = 0;
+    this.villeArr = null;
+    this.villeDep = null;
     this.villeService.GetVille(this.dep.nativeElement.value).subscribe((gps) => {
-      //console.log(gps);
-      this.villeDep = gps[0];
-      this.dep.nativeElement.value = gps[0].display_name;
+      if(gps.length > 0) {
+        this.villeDep = gps[0];
+        //this.dep.nativeElement.value = gps[0].display_name;
+      }
       if (this.villeArr != null && this.nbArret != -1 && this.dist != -1) {
         this.SoapRequest()
       }
     })
 
     this.villeService.GetVille(this.arr.nativeElement.value).subscribe((gps) => {
-      this.villeArr = gps[0];
-      this.arr.nativeElement.value = gps[0].display_name;
+      if(gps.length > 0) {
+        this.villeArr = gps[0];
+        //this.arr.nativeElement.value = gps[0].display_name;
+      }
       if (this.villeDep != null && this.nbArret != -1 && this.dist != -1) {
         this.SoapRequest()
       }
     })
 
     this.autonomie = this.listVoiture[this.select.nativeElement.value]['range']['chargetrip_range']['worst'];
-    //console.log(this.listVoiture[this.select.nativeElement.value]);//range.chargetrip_range.worst
   }
 
   SoapRequest() {
@@ -72,13 +84,19 @@ export class AppComponent {
 
   changeDist(nb:number) {
     this.dist = nb;
+    this.restRequest();
     if (this.villeDep != null && this.villeArr != null  && this.nbArret != -1) {
       this.SoapRequest()
     }
   }
 
+  restRequest() {
+    this.costService.getCostTrajet(this.dist).subscribe((response) => {
+      this.cost = JSON.parse(response).cost;
+    });
+  }
+
   selectMarque(){
-    //console.log(this.listVoiture[this.select.nativeElement.value]);
     this.voitureService.findVehicule(this.voiture.nativeElement.value).subscribe( (voitures) => {
       this.listVoiture = voitures['data']['vehicleList'];
       this.select.nativeElement.innerHTML = "<option>Model voiture</option>";

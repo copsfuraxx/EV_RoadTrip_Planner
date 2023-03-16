@@ -27,22 +27,18 @@ export class MapComponent implements OnInit {
   @Input()
   get villeDep(): string { return this._villeDep; }
   set villeDep(ville: any) {
-    if (ville != null){
-      this._villeDep = ville;
-      this.bound();
-      this.creatRoad();
-    }
+    this._villeDep = ville;
+    this.bound();
+    this.creatRoad();
   }
   private _villeDep:any;
 
   @Input()
   get villeArr(): string { return this._villeArr; }
   set villeArr(ville: any) {
-    if (ville != null){
-      this._villeArr = ville;
-      this.bound();
-      this.creatRoad();
-    }
+    this._villeArr = ville;
+    this.bound();
+    this.creatRoad();
   }
   private _villeArr:any;
 
@@ -58,7 +54,7 @@ export class MapComponent implements OnInit {
   @Output() dist = new EventEmitter<number>();
 
   map!:L.Map;
-  fakeMap:L.Map|null = null;
+  fakeMap!:L.Map;
 
   route!:L.Routing.Control
 
@@ -67,10 +63,8 @@ export class MapComponent implements OnInit {
 
   ngOnInit() {
     this.map = L.map('map').setView([51.505, -0.09], 13);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     }).addTo(this.map);
-
     this.fakeMap = L.map(document.createElement('div'));
   }
 
@@ -84,25 +78,26 @@ export class MapComponent implements OnInit {
 
   creatRoad(){
     if(this._villeDep == null || this._villeArr == null || this._autonomie == -1) return;
-    console.log(this.villeArr);
-    console.log(this.villeDep);
-    console.log(this.autonomie);
-    this.route = L.Routing.control({
+    this.fakeMap.eachLayer((layer) => {
+      layer.remove();
+    });
+    let _route = L.Routing.control({
       waypoints: [
         L.latLng(this._villeDep.lat, this._villeDep.lon),
         L.latLng(this._villeArr.lat, this._villeArr.lon)
       ]
     });
-
-    this.route.on("routesfound",(e) => this.creatRoad2(e));
-    this.route.addTo(this.fakeMap!);
+    _route.on("routesfound",(e) => this.creatRoad2(e));
+    _route.addTo(this.fakeMap!);
   }
 
   async creatRoad2(e:any) {
+    if (this.route != null) {
+      this.map.removeControl(this.route);
+    }
     let indexs = this.calculIndexArray(e.routes[0].summary.totalDistance, this._autonomie * 1000, e.routes[0].waypointIndices[1]);
     this.nbArret.emit(indexs.length);
     this.dist.emit(e.routes[0].summary.totalDistance / 1000);
-    //console.log(indexs.length);
     let waypoints = [];
     waypoints.push(L.latLng(this._villeDep.lat, this._villeDep.lon));
     for (let i = 0; i < indexs.length; i++) {
@@ -116,7 +111,7 @@ export class MapComponent implements OnInit {
       waypoints: waypoints
     });
     _route.addTo(this.map);
-    this.fakeMap = null;
+    //this.fakeMap = null;
     this.route = _route;
   }
 
@@ -134,7 +129,6 @@ export class MapComponent implements OnInit {
       for (let i = 1; i <= nbReloads; i++) {
         arrayIndex.push(index * i);
       }
-      //console.log(arrayIndex);
       return arrayIndex;
     }
     return [];
